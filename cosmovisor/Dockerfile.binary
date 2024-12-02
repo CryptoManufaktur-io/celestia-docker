@@ -29,6 +29,8 @@ RUN mv cosmovisor /usr/local/bin
 
 RUN mkdir -p /cosmos/cosmovisor/genesis/bin
 RUN mkdir /cosmos/cosmovisor/upgrades
+RUN mkdir /cosmos/config
+RUN mkdir /cosmos/data
 
 # Copy binaries.
 COPY --from=dasel --chown=${USER}:${USER} /usr/local/bin/dasel /usr/local/bin/

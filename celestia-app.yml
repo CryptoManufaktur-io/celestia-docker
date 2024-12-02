@@ -7,8 +7,7 @@ x-logging: &logging
       tag: '{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}'
 
 services:
-  celestia-app:
-    container_name: celestia
+  consensus:
     build:
       context: ./cosmovisor
       dockerfile: Dockerfile.binary
@@ -52,7 +51,9 @@ services:
         soft: 262144
         hard: 262144
     volumes:
-      - celestia-app-data:/cosmos
+      - consensus-data:/cosmos
+      - ./config/priv_validator_key.json:/cosmos/config/priv_validator_key.json:rw
+      - ./config/priv_validator_state.json:/cosmos/data/priv_validator_state.json:rw
     entrypoint:
       - docker-entrypoint.sh
       - cosmovisor
@@ -88,5 +89,60 @@ services:
         - metrics.instance=celestia-appd
         - metrics.network=${NETWORK}
 
+  cli:
+    profiles: ["tools"]
+    build:
+      context: ./celestia-cli
+      dockerfile: Dockerfile.binary
+      args:
+        - DAEMON_VERSION=${CELESTIA_APP_VERSION:-v3.0.2}
+        - USER=celestia
+    image: celestia-cli:local
+    pull_policy: never
+    user: celestia
+    volumes:
+      - ./keyring:/cosmos/keyring-test:rw
+      - ./config/priv_validator_key.json:/cosmos/config/priv_validator_key.json:rw
+      - ./config/priv_validator_state.json:/cosmos/data/priv_validator_state.json:rw
+
+  create-validator-keys:
+    profiles: ["tools"]
+    build:
+      context: ./celestia-cli
+      dockerfile: Dockerfile.binary
+      args:
+        - DAEMON_VERSION=${CELESTIA_APP_VERSION:-v3.0.2}
+        - USER=celestia
+    image: celestia-cli:local
+    pull_policy: never
+    user: celestia
+    volumes:
+      - ./config:/data/config:rw
+    entrypoint: ["/bin/bash","-c"]
+    command:
+      - |
+        celestia-appd init $MONIKER --chain-id $NETWORK --home /cosmos
+        cp /cosmos/config/priv_validator_key.json /data/config/
+        cp /cosmos/data/priv_validator_state.json /data/config/
+
+  create-wallet:
+    profiles: ["tools"]
+    build:
+      context: ./celestia-cli
+      dockerfile: Dockerfile.binary
+      args:
+        - DAEMON_VERSION=${CELESTIA_APP_VERSION:-v3.0.2}
+        - USER=celestia
+    image: celestia-cli:local
+    pull_policy: never
+    user: celestia
+    volumes:
+      - ./keyring:/cosmos/keyring-test:rw
+    entrypoint: ["/bin/bash","-c"]
+    command:
+      - |
+        celestia-appd config keyring-backend test --home /cosmos
+        celestia-appd keys add $MONIKER --home /cosmos > /cosmos/keyring-test/${MONIKER}.account_info 2>&1
+
 volumes:
-  celestia-app-data:
+  consensus-data:
