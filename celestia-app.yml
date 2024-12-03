@@ -144,5 +144,38 @@ services:
         celestia-appd config keyring-backend test --home /cosmos
         celestia-appd keys add $MONIKER --home /cosmos > /cosmos/keyring-test/${MONIKER}.account_info 2>&1
 
+  register-validator:
+    profiles: ["tools"]
+    build:
+      context: ./celestia-cli
+      dockerfile: Dockerfile.binary
+      args:
+        - DAEMON_VERSION=${CELESTIA_APP_VERSION:-v3.0.2}
+        - USER=celestia
+    image: celestia-cli:local
+    pull_policy: never
+    user: celestia
+    volumes:
+      - ./config/priv_validator_key.json:/cosmos/config/priv_validator_key.json:ro
+      - ./config/priv_validator_state.json:/cosmos/data/priv_validator_state.json:ro
+      - ./keyring:/cosmos/keyring-test:ro
+    entrypoint: ["/bin/bash","-c"]
+    command:
+      - |
+        celestia-appd --home /cosmos tx staking create-validator \
+        --amount=1000000utia \
+        --pubkey=$(celestia-appd --home /cosmos tendermint show-validator) \
+        --moniker=$MONIKER \
+        --chain-id=mocha-4 \
+        --commission-rate=0.1 \
+        --commission-max-rate=0.2 \
+        --commission-max-change-rate=0.01 \
+        --min-self-delegation=1000000 \
+        --from=$MONIKER \
+        --keyring-backend=test \
+        --fees=21000utia \
+        --gas=220000 \
+        --node http://consensus:$CL_RPC_PORT/
+
 volumes:
   consensus-data:

@@ -20,6 +20,12 @@ Make sure to backup the `keyring/$MONIKER.account_info` file, it is the only way
 
 Run `docker compose run --rm create-wallet`
 
+### Register Validator
+
+This assumes an operator wallet is present in the `keryring/` directory and the `priv_validator_key.json` is present in the `config/` folder.
+
+`docker compose run --rm register-validator`
+
 ### CLI
 
 An image with the `celestia-appd` binary is also avilable, e.g:
