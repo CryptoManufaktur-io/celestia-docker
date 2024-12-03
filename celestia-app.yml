@@ -52,8 +52,8 @@ services:
         hard: 262144
     volumes:
       - consensus-data:/cosmos
-      - ./config/priv_validator_key.json:/cosmos/config/priv_validator_key.json:rw
-      - ./config/priv_validator_state.json:/cosmos/data/priv_validator_state.json:rw
+      - ./keys/consensus/priv_validator_key.json:/cosmos/config/priv_validator_key.json:rw
+      - ./keys/consensus/priv_validator_state.json:/cosmos/data/priv_validator_state.json:rw
     entrypoint:
       - docker-entrypoint.sh
       - cosmovisor
@@ -101,9 +101,9 @@ services:
     pull_policy: never
     user: celestia
     volumes:
-      - ./keyring:/cosmos/keyring-test:rw
-      - ./config/priv_validator_key.json:/cosmos/config/priv_validator_key.json:rw
-      - ./config/priv_validator_state.json:/cosmos/data/priv_validator_state.json:rw
+      - ./keys/operator:/cosmos/keyring-test:rw
+      - ./keys/consensus/priv_validator_key.json:/cosmos/config/priv_validator_key.json:rw
+      - ./keys/consensus/priv_validator_state.json:/cosmos/data/priv_validator_state.json:rw
 
   create-validator-keys:
     profiles: ["tools"]
@@ -117,7 +117,7 @@ services:
     pull_policy: never
     user: celestia
     volumes:
-      - ./config:/data/config:rw
+      - ./keys/consensus:/data/config:rw
     entrypoint: ["/bin/bash","-c"]
     command:
       - |
@@ -137,12 +137,13 @@ services:
     pull_policy: never
     user: celestia
     volumes:
-      - ./keyring:/cosmos/keyring-test:rw
+      - ./keys/operator:/cosmos/keyring-test:rw
     entrypoint: ["/bin/bash","-c"]
     command:
       - |
         celestia-appd config keyring-backend test --home /cosmos
         celestia-appd keys add $MONIKER --home /cosmos > /cosmos/keyring-test/${MONIKER}.account_info 2>&1
+        cat /cosmos/keyring-test/${MONIKER}.account_info
 
   register-validator:
     profiles: ["tools"]
@@ -156,12 +157,14 @@ services:
     pull_policy: never
     user: celestia
     volumes:
-      - ./config/priv_validator_key.json:/cosmos/config/priv_validator_key.json:ro
-      - ./config/priv_validator_state.json:/cosmos/data/priv_validator_state.json:ro
-      - ./keyring:/cosmos/keyring-test:ro
+      - ./keys/consensus/priv_validator_key.json:/cosmos/config/priv_validator_key.json:ro
+      - ./keys/consensus/priv_validator_state.json:/cosmos/data/priv_validator_state.json:ro
+      - ./keys/operator:/cosmos/keyring-test:ro
     entrypoint: ["/bin/bash","-c"]
     command:
       - |
+        echo "Validator pubkey:"
+        celestia-appd --home /cosmos tendermint show-validator
         celestia-appd --home /cosmos tx staking create-validator \
         --amount=1000000utia \
         --pubkey=$(celestia-appd --home /cosmos tendermint show-validator) \
