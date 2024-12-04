@@ -19,8 +19,12 @@ version() {
 # Client versions
 # Adjust for your clients and how to check their version
   case "${__value}" in
-    *celestia.yml* )
-      __docompose exec celestia cosmovisor version
+    *celestia-app.yml* )
+      __docompose exec consensus cosmovisor version
+      echo
+      ;;&
+    *celestia-node.yml* )
+      __docompose exec celestia-node celestia version
       ;;&
   esac
 }
