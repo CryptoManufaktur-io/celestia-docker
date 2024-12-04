@@ -16,6 +16,10 @@ RUN adduser \
 
 RUN usermod -rG users ${USER}
 
+VOLUME /data
+RUN mkdir -p /data/config
+RUN chown -R ${USER}:${USER} /data && chmod 777 /data
+
 RUN mkdir /cosmos
 RUN mkdir /cosmos/config
 RUN mkdir /cosmos/data
