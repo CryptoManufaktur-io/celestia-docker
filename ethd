@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 __project_name="Celestia Docker"
 __app_name="Celestia node"
-__sample_service="celestia"
+__sample_service="consensus"
 __docker_exe="docker"
 __compose_exe="docker compose"
 __compose_upgraded=0
