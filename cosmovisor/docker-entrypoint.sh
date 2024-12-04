@@ -41,7 +41,7 @@ if [[ ! -f /cosmos/.initialized ]]; then
   if [ -n "${RAPID_SYNC_URL}" ]; then
     echo "Configuring rapid state sync"
     # Get the latest height
-    LATEST=$(curl -s "${RAPID_SYNC_URL}/commit" | jq -r '.result.signed_header.header.height')
+    LATEST=$(curl -s "${RAPID_SYNC_URL}/block" | jq -r '.result.block.header.height')
     echo "LATEST=$LATEST"
 
     # Calculate the snapshot height
@@ -49,7 +49,7 @@ if [[ ! -f /cosmos/.initialized ]]; then
     echo "SNAPSHOT_HEIGHT=$SNAPSHOT_HEIGHT"
 
     # Get the snapshot hash
-    SNAPSHOT_HASH=$(curl -s $RAPID_SYNC_URL/commit\?height\=$SNAPSHOT_HEIGHT | jq -r '.result.signed_header.commit.block_id.hash')
+    SNAPSHOT_HASH=$(curl -s $RAPID_SYNC_URL/block\?height\=$SNAPSHOT_HEIGHT | jq -r '.result.block_id.hash')
     echo "SNAPSHOT_HASH=$SNAPSHOT_HASH"
 
     dasel put -f /cosmos/config/config.toml -v true statesync.enable
