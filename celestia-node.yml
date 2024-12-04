@@ -57,6 +57,7 @@ services:
   create-celestia-node-key:
     profiles: ["tools"]
     image: ghcr.io/celestiaorg/celestia-node:${CELESTIA_NODE_VERSION:-v0.20.4}
+    user: root
     volumes:
       - ./keys/celestia-node:/home/celestia/keys/keyring-test:rw
     entrypoint: ["/bin/bash","-c"]
@@ -65,6 +66,7 @@ services:
         P2P_NETWORK=$(echo "$NETWORK" | grep -Eo 'mocha|arabica' | sed 's/^/--p2p.network /' || echo "")
         cel-key add $MONIKER --keyring-backend test --node.type $CELESTIA_NODE_TYPE $$P2P_NETWORK 2>&1 | tee /tmp/temp_backup
         [ $${PIPESTATUS[0]} -eq 0 ] && sed -n '/- address/,$$p' /tmp/temp_backup > "/home/celestia/keys/keyring-test/$MONIKER.backup" || rm /tmp/temp_backup
+        chown -R celestia:celestia /home/celestia/keys/keyring-test/*
 
 volumes:
   celestia-node-data:

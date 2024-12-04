@@ -115,7 +115,7 @@ services:
         - USER=celestia
     image: celestia-cli:local
     pull_policy: never
-    user: celestia
+    user: root
     volumes:
       - ./keys/consensus:/data/config:rw
     entrypoint: ["/bin/bash","-c"]
@@ -124,6 +124,7 @@ services:
         celestia-appd init $MONIKER --chain-id $NETWORK --home /cosmos
         cp /cosmos/config/priv_validator_key.json /data/config/
         cp /cosmos/data/priv_validator_state.json /data/config/
+        chown -R celestia:celestia /data/config/*
 
   create-operator-wallet:
     profiles: ["tools"]
@@ -135,7 +136,7 @@ services:
         - USER=celestia
     image: celestia-cli:local
     pull_policy: never
-    user: celestia
+    user: root
     volumes:
       - ./keys/operator:/cosmos/keyring-test:rw
     entrypoint: ["/bin/bash","-c"]
@@ -144,6 +145,7 @@ services:
         celestia-appd config keyring-backend test --home /cosmos
         celestia-appd keys add $MONIKER --home /cosmos 2>&1 | tee /tmp/temp_backup
         [ $${PIPESTATUS[0]} -eq 0 ] && sed -n '/- address/,$$p' /tmp/temp_backup > "/cosmos/keyring-test/${MONIKER}.backup" || rm /tmp/temp_backup
+        chown -R celestia:celestia /cosmos/keyring-test/*
 
   register-validator:
     profiles: ["tools"]
