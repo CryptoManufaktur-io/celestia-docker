@@ -45,7 +45,7 @@ if [[ ! -f /cosmos/.initialized ]]; then
     echo "LATEST=$LATEST"
 
     # Calculate the snapshot height
-    let "SNAPSHOT_HEIGHT=$LATEST / 100 * 100"
+    SNAPSHOT_HEIGHT=$((LATEST - 2000));
     echo "SNAPSHOT_HEIGHT=$SNAPSHOT_HEIGHT"
 
     # Get the snapshot hash
