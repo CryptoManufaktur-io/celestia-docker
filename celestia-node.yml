@@ -63,8 +63,8 @@ services:
     command:
       - |
         P2P_NETWORK=$(echo "$NETWORK" | grep -Eo 'mocha|arabica' | sed 's/^/--p2p.network /' || echo "")
-        cel-key add $MONIKER --keyring-backend test --node.type $CELESTIA_NODE_TYPE $P2P_NETWORK > /home/celestia/keys/keyring-test/$MONIKER.backup 2>&1
-        cat /home/celestia/keys/keyring-test/$MONIKER.backup
+        cel-key add $MONIKER --keyring-backend test --node.type $CELESTIA_NODE_TYPE $$P2P_NETWORK 2>&1 | tee /tmp/temp_backup
+        [ $${PIPESTATUS[0]} -eq 0 ] && sed -n '/- address/,$$p' /tmp/temp_backup > "/home/celestia/keys/keyring-test/$MONIKER.backup" || rm /tmp/temp_backup
 
 volumes:
   celestia-node-data:

@@ -4,25 +4,27 @@ Docker compose for Celestia.
 
 Meant to be used with central-proxy-docker for traefik and Prometheus remote write; use :ext-network.yml in COMPOSE_FILE inside .env in that case.
 
+## celestia-app
+
 ### Validator Key Generation
 
 Run `docker compose run --rm create-validator-keys`
 
-It is meant to be executed only once, it has no sanity checks and creates the `priv_validator_key.json`, `priv_validator_state.json` and `voter_state.json` files inside the `config/` folder.
+It is meant to be executed only once, it has no sanity checks and creates the `priv_validator_key.json`, `priv_validator_state.json` and `voter_state.json` files inside the `keys/consensus/` folder.
 
 Remember to backup those files if you're running a validator.
 
-### Wallet Creation
+### Operator Wallet Creation
 
-An operator wallet is needed for staking operations. We provide a simple command to generate it, so it can be done in an air-gapped environment. It is meant to be executed only once, it has no sanity checks. It creates the operator wallet and stores the result in the `keyring/` folder.
+An operator wallet is needed for staking operations. We provide a simple command to generate it, so it can be done in an air-gapped environment. It is meant to be executed only once, it has no sanity checks. It creates the operator wallet and stores the result in the `keys/operator/` folder.
 
-Make sure to backup the `keyring/$MONIKER.account_info` file, it is the only way to recover the wallet.
+Make sure to backup the `keys/operator/$MONIKER.backup` file, it is the only way to recover the wallet.
 
-Run `docker compose run --rm create-wallet`
+Run `docker compose run --rm create-operator-wallet`
 
 ### Register Validator
 
-This assumes an operator wallet `keyring/$MONIKER.info` is present, and the `priv_validator_key.json` is present in the `config/` folder.
+This assumes an operator wallet `keys/operator/$MONIKER.info` is present, and the `priv_validator_key.json` is present in the `keys/consensus/` folder.
 
 `docker compose run --rm register-validator`
 
@@ -54,6 +56,16 @@ sysctl net.ipv4.tcp_congestion_control
 For *testing* purposes, it can be bypassed by adding the following flag to `EXTRA_FLAGS` in the `.env` file:
 
 `--force-no-bbr`
+
+## celestia-node
+
+### Create node-key
+
+Run `docker compose run --rm create-celestia-node-key`
+
+It is meant to be executed only once, it has no sanity checks and creates the `$MONIKER.info`, `$xyz.address` and `$MONIKER.backup` files inside the `keys/celestia-node/` folder.
+
+Remember to backup those files if you're running a validator.
 
 ## Version
 

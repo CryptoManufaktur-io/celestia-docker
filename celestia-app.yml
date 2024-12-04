@@ -125,7 +125,7 @@ services:
         cp /cosmos/config/priv_validator_key.json /data/config/
         cp /cosmos/data/priv_validator_state.json /data/config/
 
-  create-wallet:
+  create-operator-wallet:
     profiles: ["tools"]
     build:
       context: ./celestia-cli
@@ -142,8 +142,8 @@ services:
     command:
       - |
         celestia-appd config keyring-backend test --home /cosmos
-        celestia-appd keys add $MONIKER --home /cosmos > /cosmos/keyring-test/${MONIKER}.account_info 2>&1
-        cat /cosmos/keyring-test/${MONIKER}.account_info
+        celestia-appd keys add $MONIKER --home /cosmos 2>&1 | tee /tmp/temp_backup
+        [ $${PIPESTATUS[0]} -eq 0 ] && sed -n '/- address/,$$p' /tmp/temp_backup > "/cosmos/keyring-test/${MONIKER}.backup" || rm /tmp/temp_backup
 
   register-validator:
     profiles: ["tools"]
