@@ -140,7 +140,7 @@ if [ "$__should_update" -eq 2 ]; then
   echo "Downloading network upgrade..."
   # This is a network upgrade. We'll download the binary, put it in a new folder
   # and we'll let cosmovisor handle the upgrade just in time.
-  __proposals_url="${ARCHIVE_RPC_URL}/cosmos/gov/v1/proposals?pagination.reverse=true&proposal_status=PROPOSAL_STATUS_PASSED&pagination.limit=100"
+  __proposals_url="${ARCHIVE_RPC_URL}/cosmos/gov/v1/proposals?pagination.reverse=true&pagination.limit=100"
   __proposal=$(curl -s "$__proposals_url" | jq -r --arg version "$DAEMON_VERSION" '
     .proposals[] |
     select(.status == "PROPOSAL_STATUS_PASSED" and (.metadata | contains($DAEMON_VERSION)))
