@@ -71,4 +71,4 @@ Remember to backup those files if you're running a validator.
 
 Celestia Docker uses a semver scheme.
 
-This is celestia-docker v0.1.0
+This is celestia-docker v1.0.0
