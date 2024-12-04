@@ -21,7 +21,7 @@ services:
     stop_grace_period: 5m
     environment:
       - DAEMON_VERSION=${CELESTIA_APP_VERSION}
-      - EXTRA_FLAGS=${EXTRA_FLAGS:-}
+      - EXTRA_FLAGS=${CELESTIA_APP_EXTRA_FLAGS:-}
       - NETWORK=${NETWORK}
       - MONIKER=${MONIKER}
       - CL_GRPC_PORT=${CL_GRPC_PORT:-9090}
@@ -41,8 +41,8 @@ services:
       - CLIENT_START_PROCESS=false
       - UNSAFE_SKIP_BACKUP=true
       - LOG_LEVEL=${LOG_LEVEL:-info}
-      - PRUNING=${PRUNING:-default}
-      - MIN_RETAIN_BLOCKS=${MIN_RETAIN_BLOCKS:-0}
+      - PRUNING=${CELESTIA_APP_PRUNING:-default}
+      - MIN_RETAIN_BLOCKS=${CELESTIA_APP_MIN_RETAIN_BLOCKS:-0}
     ports:
       - ${CL_P2P_PORT:-26656}:${CL_P2P_PORT:-26656}/tcp
       - ${CL_RPC_PORT:-26657}:${CL_RPC_PORT:-26657}/tcp

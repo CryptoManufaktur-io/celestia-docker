@@ -53,7 +53,7 @@ Then verify BBR is enabled:
 sysctl net.ipv4.tcp_congestion_control
 ```
 
-For *testing* purposes, it can be bypassed by adding the following flag to `EXTRA_FLAGS` in the `.env` file:
+For *testing* purposes, it can be bypassed by adding the following flag to `CELESTIA_APP_EXTRA_FLAGS` in the `.env` file:
 
 `--force-no-bbr`
 
