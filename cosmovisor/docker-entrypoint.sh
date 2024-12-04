@@ -32,7 +32,7 @@ if [[ ! -f /cosmos/.initialized ]]; then
 
   if [ -n "$SNAPSHOT" ]; then
     echo "Downloading snapshot..."
-    curl -o - -L $SNAPSHOT | lz4 -c -d - | tar -x -C /cosmos
+    curl -o - -L $SNAPSHOT | lz4 -c -d - | tar --exclude='data/priv_validator_state.json' -x -C /cosmos
   else
     echo "No snapshot URL defined."
   fi
