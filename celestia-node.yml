@@ -24,6 +24,7 @@ services:
       - P2P_PORT=${CELESTIA_NODE_P2P_PORT:-2121}
       - NETWORK=${NETWORK:-celestia}
       - EXTRAS=${CELESTIA_NODE_EXTRA_FLAGS}
+    <<: *logging
     volumes:
       - celestia-node-data:/data
       - ./keys/celestia-node:/data/keys/keyring-test:ro
