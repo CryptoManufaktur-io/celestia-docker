@@ -10,39 +10,20 @@ services:
   consensus:
     build:
       context: ./celestia-app
-      dockerfile: Dockerfile.binary
+      dockerfile: $DOCKERFILE
       args:
-        - USER=celestia
-        - DAEMON_VERSION=${CELESTIA_APP_VERSION}
-    image: celestia:local
+        - PROJECT_VERSION=$CELESTIA_APP_VERSION
+        - PROJECT_BIN=$CELESTIA_BIN
+        - PROJECT_HOME=$CELESTIA_HOME
+        - USER_NAME=$CELESTIA_USER_NAME
+    image: celestia:$CELESTIA_APP_VERSION
     pull_policy: never
-    user: celestia
+    user: $CELESTIA_USER_NAME
     restart: unless-stopped
     stop_grace_period: 5m
-    environment:
-      - DAEMON_VERSION=${CELESTIA_APP_VERSION}
-      - EXTRA_FLAGS=${CELESTIA_APP_EXTRA_FLAGS:-}
-      - NETWORK=${NETWORK}
-      - MONIKER=${MONIKER}
-      - CL_GRPC_PORT=${CL_GRPC_PORT:-9090}
-      - CL_P2P_PORT=${CL_P2P_PORT:-26656}
-      - CL_RPC_PORT=${CL_RPC_PORT:-26657}
-      - RPC_PORT=${RPC_PORT:-8545}
-      - WS_PORT=${WS_PORT:-8546}
-      - SNAPSHOT=${SNAPSHOT}
-      - RAPID_SYNC_URL=${RAPID_SYNC_URL}
-      - DAEMON_HOME=/cosmos
-      - DAEMON_NAME=celestia-appd
-      - DAEMON_ALLOW_DOWNLOAD_BINARIES=true
-      - DAEMON_RESTART_AFTER_UPGRADE=true
-      - DAEMON_DATA_BACKUP_DIR=/cosmos
-      - CLIENT_DAEMON_NAME=celestia-appd
-      - CLIENT_SKIP_UPGRADE=false
-      - CLIENT_START_PROCESS=false
-      - UNSAFE_SKIP_BACKUP=true
-      - LOG_LEVEL=${LOG_LEVEL:-info}
-      - PRUNING=${CELESTIA_APP_PRUNING:-default}
-      - MIN_RETAIN_BLOCKS=${CELESTIA_APP_MIN_RETAIN_BLOCKS:-0}
+    env_file:
+      - .env
+    entrypoint: ["/usr/bin/docker-entrypoint.sh"]
     ports:
       - ${CL_P2P_PORT:-26656}:${CL_P2P_PORT:-26656}/tcp
       - ${CL_RPC_PORT:-26657}:${CL_RPC_PORT:-26657}/tcp
@@ -52,15 +33,8 @@ services:
         soft: 262144
         hard: 262144
     volumes:
-      - consensus-data:/cosmos
-    entrypoint:
-      - docker-entrypoint.sh
-      - celestia-appd
-      - start
-      - --home
-      - /cosmos
-      - --log_format
-      - json
+      - consensus-data:$CELESTIA_HOME
+      - ./celestia-app/docker-entrypoint.sh:/usr/bin/docker-entrypoint.sh
     labels:
         - traefik.enable=true
         - traefik.http.routers.${RPC_HOST}.service=${RPC_HOST}
@@ -71,7 +45,7 @@ services:
         - traefik.http.routers.${RPC_HOST}lb.entrypoints=websecure
         - traefik.http.routers.${RPC_HOST}lb.rule=Host(`${RPC_LB}.${DOMAIN}`)
         - traefik.http.routers.${RPC_HOST}lb.tls.certresolver=letsencrypt
-        - traefik.http.services.${RPC_HOST}.loadbalancer.server.port=${RPC_PORT}
+        - traefik.http.services.${RPC_HOST}.loadbalancer.server.port=${RPC_PORT:-8545}
         - traefik.http.routers.${WS_HOST:-celestiaws}.service=${WS_HOST:-celestiaws}
         - traefik.http.routers.${WS_HOST:-celestiaws}.entrypoints=websecure
         - traefik.http.routers.${WS_HOST:-celestiaws}.rule=Host(`${WS_HOST:-celestiaws}.${DOMAIN}`)
@@ -91,7 +65,7 @@ services:
     profiles: ["tools"]
     build:
       context: ./celestia-cli
-      dockerfile: Dockerfile.binary
+      dockerfile: ${DOCKERFILE}
       args:
         - DAEMON_VERSION=${CELESTIA_APP_VERSION:-v3.0.2}
         - USER=celestia
@@ -99,19 +73,21 @@ services:
     pull_policy: never
     user: celestia
     volumes:
-      - ./keys/operator:/cosmos/keyring-test:rw
-      - ./keys/consensus/priv_validator_key.json:/cosmos/config/priv_validator_key.json:rw
-      - ./keys/consensus/priv_validator_state.json:/cosmos/data/priv_validator_state.json:rw
+      - ./keys/operator:$CELESTIA_HOME/keyring-test:rw
+      - ./keys/consensus/priv_validator_key.json:$CELESTIA_HOME/config/priv_validator_key.json:rw
+      - ./keys/consensus/priv_validator_state.json:$CELESTIA_HOME/data/priv_validator_state.json:rw
 
   create-validator-keys:
     profiles: ["tools"]
     build:
-      context: ./celestia-cli
-      dockerfile: Dockerfile.binary
+      context: ./celestia-app
+      dockerfile: ${DOCKERFILE}
       args:
-        - DAEMON_VERSION=${CELESTIA_APP_VERSION:-v3.0.2}
-        - USER=celestia
-    image: celestia-cli:local
+        - PROJECT_VERSION=$CELESTIA_APP_VERSION
+        - PROJECT_BIN=$CELESTIA_BIN
+        - PROJECT_HOME=$CELESTIA_HOME
+        - USER_NAME=$CELESTIA_USER_NAME
+    image: celestia:$CELESTIA_APP_VERSION
     pull_policy: never
     user: root
     volumes:
@@ -119,101 +95,109 @@ services:
     entrypoint: ["/bin/bash","-c"]
     command:
       - |
-        celestia-appd init $MONIKER --chain-id $NETWORK --home /cosmos
-        cp /cosmos/config/priv_validator_key.json /data/config/
-        cp /cosmos/data/priv_validator_state.json /data/config/
+        celestia-appd init $MONIKER --chain-id $NETWORK --home $CELESTIA_HOME
+        cp $CELESTIA_HOME/config/priv_validator_key.json /data/config/
+        cp $CELESTIA_HOME/data/priv_validator_state.json /data/config/
         chown -R celestia:celestia /data/config/*
         echo "Validator keys created!"
 
   import-validator-keys:
     profiles: ["tools"]
     build:
-      context: ./celestia-cli
-      dockerfile: Dockerfile.binary
+      context: ./celestia-app
+      dockerfile: ${DOCKERFILE}
       args:
-        - DAEMON_VERSION=${CELESTIA_APP_VERSION:-v3.0.2}
-        - USER=celestia
-    image: celestia-cli:local
+        - PROJECT_VERSION=$CELESTIA_APP_VERSION
+        - PROJECT_BIN=$CELESTIA_BIN
+        - PROJECT_HOME=$CELESTIA_HOME
+        - USER_NAME=$CELESTIA_USER_NAME
+    image: celestia:$CELESTIA_APP_VERSION
     pull_policy: never
     user: root
     volumes:
-      - consensus-data:/cosmos
+      - consensus-data:$CELESTIA_HOME
       - ./keys/consensus:/data/config:rw
     entrypoint: ["/bin/bash","-c"]
     command:
       - |
         echo "Importing validator key and state file from ./keys/consensus into container"
-        cp /data/config/priv_validator_key.json /cosmos/config/
-        cp /data/config/priv_validator_state.json /cosmos/data/
-        chown -R celestia:celestia /cosmos/config/priv_validator_key.json
-        chown -R celestia:celestia /cosmos/data/priv_validator_state.json
+        cp /data/config/priv_validator_key.json $CELESTIA_HOME/config/
+        cp /data/config/priv_validator_state.json $CELESTIA_HOME/data/
+        chown -R celestia:celestia $CELESTIA_HOME/config/priv_validator_key.json
+        chown -R celestia:celestia $CELESTIA_HOME/data/priv_validator_state.json
         echo "Validator keys imported!"
 
   export-validator-keys:
     profiles: ["tools"]
     build:
-      context: ./celestia-cli
-      dockerfile: Dockerfile.binary
+      context: ./celestia-app
+      dockerfile: ${DOCKERFILE}
       args:
-        - DAEMON_VERSION=${CELESTIA_APP_VERSION:-v3.0.2}
-        - USER=celestia
-    image: celestia-cli:local
+        - PROJECT_VERSION=$CELESTIA_APP_VERSION
+        - PROJECT_BIN=$CELESTIA_BIN
+        - PROJECT_HOME=$CELESTIA_HOME
+        - USER_NAME=$CELESTIA_USER_NAME
+    image: celestia:$CELESTIA_APP_VERSION
     pull_policy: never
     user: root
     volumes:
-      - consensus-data:/cosmos
+      - consensus-data:$CELESTIA_HOME
       - ./keys/consensus:/data/config:rw
     entrypoint: ["/bin/bash","-c"]
     command:
       - |
         echo "Exporting validator key and state file from container to ./keys/consensus"
-        cp /cosmos/config/priv_validator_key.json /data/config/
-        cp /cosmos/data/priv_validator_state.json /data/config/
+        cp $CELESTIA_HOME/config/priv_validator_key.json /data/config/
+        cp $CELESTIA_HOME/data/priv_validator_state.json /data/config/
         echo "Validator keys exported!"
 
   create-operator-wallet:
     profiles: ["tools"]
     build:
-      context: ./celestia-cli
-      dockerfile: Dockerfile.binary
+      context: ./celestia-app
+      dockerfile: ${DOCKERFILE}
       args:
-        - DAEMON_VERSION=${CELESTIA_APP_VERSION:-v3.0.2}
-        - USER=celestia
-    image: celestia-cli:local
+        - PROJECT_VERSION=$CELESTIA_APP_VERSION
+        - PROJECT_BIN=$CELESTIA_BIN
+        - PROJECT_HOME=$CELESTIA_HOME
+        - USER_NAME=$CELESTIA_USER_NAME
+    image: celestia:$CELESTIA_APP_VERSION
     pull_policy: never
     user: root
     volumes:
-      - ./keys/operator:/cosmos/keyring-test:rw
+      - ./keys/operator:$CELESTIA_HOME/keyring-test:rw
     entrypoint: ["/bin/bash","-c"]
     command:
       - |
-        celestia-appd config keyring-backend test --home /cosmos > /dev/null 2>&1
-        celestia-appd keys add $MONIKER --home /cosmos 2>&1 | tee /tmp/temp_backup
-        [ $${PIPESTATUS[0]} -eq 0 ] && sed -n '/- address/,$$p' /tmp/temp_backup > "/cosmos/keyring-test/${MONIKER}.backup" || rm /tmp/temp_backup
-        chown -R celestia:celestia /cosmos/keyring-test/*
+        celestia-appd config keyring-backend test --home $CELESTIA_HOME > /dev/null 2>&1
+        celestia-appd keys add $MONIKER --home $CELESTIA_HOME 2>&1 | tee /tmp/temp_backup
+        [ $${PIPESTATUS[0]} -eq 0 ] && sed -n '/- address/,$$p' /tmp/temp_backup > "$CELESTIA_HOME/keyring-test/${MONIKER}.backup" || rm /tmp/temp_backup
+        chown -R celestia:celestia $CELESTIA_HOME/keyring-test/*
 
   register-validator:
     profiles: ["tools"]
     build:
-      context: ./celestia-cli
-      dockerfile: Dockerfile.binary
+      context: ./celestia-app
+      dockerfile: ${DOCKERFILE}
       args:
-        - DAEMON_VERSION=${CELESTIA_APP_VERSION:-v3.0.2}
-        - USER=celestia
-    image: celestia-cli:local
+        - PROJECT_VERSION=$CELESTIA_APP_VERSION
+        - PROJECT_BIN=$CELESTIA_BIN
+        - PROJECT_HOME=$CELESTIA_HOME
+        - USER_NAME=$CELESTIA_USER_NAME
+    image: celestia:$CELESTIA_APP_VERSION
     pull_policy: never
     user: celestia
     volumes:
-      - ./keys/consensus/priv_validator_key.json:/cosmos/config/priv_validator_key.json:ro
-      - ./keys/operator:/cosmos/keyring-test:ro
+      - ./keys/consensus/priv_validator_key.json:$CELESTIA_HOME/config/priv_validator_key.json:ro
+      - ./keys/operator:$CELESTIA_HOME/keyring-test:ro
     entrypoint: ["/bin/bash","-c"]
     command:
       - |
         echo "Validator pubkey:"
-        celestia-appd --home /cosmos tendermint show-validator
-        celestia-appd --home /cosmos tx staking create-validator \
+        celestia-appd --home $CELESTIA_HOME tendermint show-validator
+        celestia-appd --home $CELESTIA_HOME tx staking create-validator \
         --amount=1000000utia \
-        --pubkey=$(celestia-appd --home /cosmos tendermint show-validator) \
+        --pubkey=$(celestia-appd --home $CELESTIA_HOME tendermint show-validator) \
         --moniker=$MONIKER \
         --chain-id=mocha-4 \
         --commission-rate=0.1 \
