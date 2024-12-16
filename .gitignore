@@ -1,4 +1,5 @@
 .env*
+*.crt
 ext-network.yml
 *.swp
 keys/
