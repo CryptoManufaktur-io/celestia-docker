@@ -186,8 +186,9 @@ services:
         - USER_NAME=$CELESTIA_USER_NAME
     image: celestia:$CELESTIA_APP_VERSION
     pull_policy: never
-    user: celestia
+    user: root
     volumes:
+      - consensus-data:$CELESTIA_HOME
       - ./keys/consensus/priv_validator_key.json:$CELESTIA_HOME/config/priv_validator_key.json:ro
       - ./keys/operator:$CELESTIA_HOME/keyring-test:ro
     entrypoint: ["/bin/bash","-c"]
