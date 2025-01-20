@@ -54,10 +54,7 @@ Starting on v3.0.0, it is required to enable BBR and MCTCP on the host machine.
 To enable BBR:
 
 ```
-sudo modprobe tcp_bbr
-net.core.default_qdisc=fq
-net.ipv4.tcp_congestion_control=bbr
-sudo sysctl -p
+./enable-bbr.sh
 ```
 
 Then verify BBR is enabled:
