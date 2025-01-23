@@ -10,7 +10,7 @@ services:
   consensus:
     build:
       context: ./celestia-app
-      dockerfile: Dockerfile.source-dev
+      dockerfile: Dockerfile.source
       args:
         - USER=celestia
         - DAEMON_VERSION=${CELESTIA_APP_VERSION}
