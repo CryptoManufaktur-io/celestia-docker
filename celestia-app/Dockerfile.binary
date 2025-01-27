@@ -1,0 +1,47 @@
+# Get dasel
+FROM ghcr.io/tomwright/dasel:2-alpine AS dasel
+
+FROM debian:bookworm-slim
+
+ARG USER=cosmos
+ARG UID=10001
+ARG DAEMON_VERSION=v3.0.2
+
+RUN apt-get update && apt-get install -y ca-certificates tzdata bash curl wget lz4 jq tar
+
+# Define mounted volume
+VOLUME /cosmos
+
+# See https://stackoverflow.com/a/55757473/12429735RUN
+RUN adduser \
+    --disabled-password \
+    --gecos "" \
+    --shell "/sbin/nologin" \
+    --uid "${UID}" \
+    "${USER}"
+
+RUN usermod -rG users ${USER}
+
+# Install celestia-app
+RUN wget https://github.com/celestiaorg/celestia-app/releases/download/${DAEMON_VERSION}/celestia-app_Linux_x86_64.tar.gz
+RUN tar xf celestia-app_Linux_x86_64.tar.gz
+RUN mv celestia-appd /usr/local/bin
+
+RUN mkdir -p /cosmos/config
+RUN mkdir /cosmos/data
+
+# Copy binaries.
+COPY --from=dasel --chown=${USER}:${USER} /usr/local/bin/dasel /usr/local/bin/
+
+# Set correct permissions.
+RUN chown -R ${USER}:${USER} /cosmos && chmod -R 700 /cosmos
+
+# Cannot assume buildkit, hence no chmod
+COPY ./docker-entrypoint.sh /usr/local/bin/
+
+# Belt and suspenders
+RUN chmod -R 755 /usr/local/bin/*
+
+USER ${USER}
+
+ENTRYPOINT ["celestia-appd"]
