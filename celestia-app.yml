@@ -10,11 +10,13 @@ services:
   consensus:
     build:
       context: ./celestia-app
-      dockerfile: Dockerfile.binary
+      dockerfile: ${CELESTIA_APP_DOCKERFILE}
       args:
         - USER=celestia
         - DAEMON_VERSION=${CELESTIA_APP_VERSION}
-    image: celestia:local
+        - DAEMON_HOME=/cosmos
+        - DAEMON_NAME=celestia-appd
+    image: celestia:${CELESTIA_APP_VERSION}
     pull_policy: never
     user: celestia
     restart: unless-stopped
@@ -33,13 +35,6 @@ services:
       - RAPID_SYNC_URL=${RAPID_SYNC_URL}
       - DAEMON_HOME=/cosmos
       - DAEMON_NAME=celestia-appd
-      - DAEMON_ALLOW_DOWNLOAD_BINARIES=true
-      - DAEMON_RESTART_AFTER_UPGRADE=true
-      - DAEMON_DATA_BACKUP_DIR=/cosmos
-      - CLIENT_DAEMON_NAME=celestia-appd
-      - CLIENT_SKIP_UPGRADE=false
-      - CLIENT_START_PROCESS=false
-      - UNSAFE_SKIP_BACKUP=true
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - PRUNING=${CELESTIA_APP_PRUNING:-default}
       - MIN_RETAIN_BLOCKS=${CELESTIA_APP_MIN_RETAIN_BLOCKS:-0}
@@ -90,12 +85,14 @@ services:
   cli:
     profiles: ["tools"]
     build:
-      context: ./celestia-cli
-      dockerfile: Dockerfile.binary
+      context: ./celestia-app
+      dockerfile: ${CELESTIA_APP_DOCKERFILE}
       args:
-        - DAEMON_VERSION=${CELESTIA_APP_VERSION:-v3.0.2}
         - USER=celestia
-    image: celestia-cli:local
+        - DAEMON_VERSION=${CELESTIA_APP_VERSION}
+        - DAEMON_HOME=/cosmos
+        - DAEMON_NAME=celestia-appd
+    image: celestia:${CELESTIA_APP_VERSION}
     pull_policy: never
     user: celestia
     volumes:
@@ -106,12 +103,14 @@ services:
   create-validator-keys:
     profiles: ["tools"]
     build:
-      context: ./celestia-cli
-      dockerfile: Dockerfile.binary
+      context: ./celestia-app
+      dockerfile: ${CELESTIA_APP_DOCKERFILE}
       args:
-        - DAEMON_VERSION=${CELESTIA_APP_VERSION:-v3.0.2}
         - USER=celestia
-    image: celestia-cli:local
+        - DAEMON_VERSION=${CELESTIA_APP_VERSION}
+        - DAEMON_HOME=/cosmos
+        - DAEMON_NAME=celestia-appd
+    image: celestia:${CELESTIA_APP_VERSION}
     pull_policy: never
     user: root
     volumes:
@@ -128,12 +127,14 @@ services:
   import-validator-keys:
     profiles: ["tools"]
     build:
-      context: ./celestia-cli
-      dockerfile: Dockerfile.binary
+      context: ./celestia-app
+      dockerfile: ${CELESTIA_APP_DOCKERFILE}
       args:
-        - DAEMON_VERSION=${CELESTIA_APP_VERSION:-v3.0.2}
         - USER=celestia
-    image: celestia-cli:local
+        - DAEMON_VERSION=${CELESTIA_APP_VERSION}
+        - DAEMON_HOME=/cosmos
+        - DAEMON_NAME=celestia-appd
+    image: celestia:${CELESTIA_APP_VERSION}
     pull_policy: never
     user: root
     volumes:
@@ -152,12 +153,14 @@ services:
   export-validator-keys:
     profiles: ["tools"]
     build:
-      context: ./celestia-cli
-      dockerfile: Dockerfile.binary
+      context: ./celestia-app
+      dockerfile: ${CELESTIA_APP_DOCKERFILE}
       args:
-        - DAEMON_VERSION=${CELESTIA_APP_VERSION:-v3.0.2}
         - USER=celestia
-    image: celestia-cli:local
+        - DAEMON_VERSION=${CELESTIA_APP_VERSION}
+        - DAEMON_HOME=/cosmos
+        - DAEMON_NAME=celestia-appd
+    image: celestia:${CELESTIA_APP_VERSION}
     pull_policy: never
     user: root
     volumes:
@@ -174,12 +177,14 @@ services:
   create-operator-wallet:
     profiles: ["tools"]
     build:
-      context: ./celestia-cli
-      dockerfile: Dockerfile.binary
+      context: ./celestia-app
+      dockerfile: ${CELESTIA_APP_DOCKERFILE}
       args:
-        - DAEMON_VERSION=${CELESTIA_APP_VERSION:-v3.0.2}
         - USER=celestia
-    image: celestia-cli:local
+        - DAEMON_VERSION=${CELESTIA_APP_VERSION}
+        - DAEMON_HOME=/cosmos
+        - DAEMON_NAME=celestia-appd
+    image: celestia:${CELESTIA_APP_VERSION}
     pull_policy: never
     user: root
     volumes:
@@ -195,12 +200,14 @@ services:
   register-validator:
     profiles: ["tools"]
     build:
-      context: ./celestia-cli
-      dockerfile: Dockerfile.binary
+      context: ./celestia-app
+      dockerfile: ${CELESTIA_APP_DOCKERFILE}
       args:
-        - DAEMON_VERSION=${CELESTIA_APP_VERSION:-v3.0.2}
         - USER=celestia
-    image: celestia-cli:local
+        - DAEMON_VERSION=${CELESTIA_APP_VERSION}
+        - DAEMON_HOME=/cosmos
+        - DAEMON_NAME=celestia-appd
+    image: celestia:${CELESTIA_APP_VERSION}
     pull_policy: never
     user: celestia
     volumes:
