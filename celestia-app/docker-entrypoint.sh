@@ -12,7 +12,7 @@ if [[ ! -f /cosmos/.initialized ]]; then
 
   celestia-appd download-genesis $NETWORK --home /cosmos
   dasel put -f /cosmos/config/config.toml -v $SEEDS p2p.seeds
-  dasel put -f /cosmos/config/config.toml -v "kv" indexer
+  dasel put -f /cosmos/config/config.toml -v "null" indexer
 
   if [ -n "$SNAPSHOT" ]; then
     echo "Downloading snapshot..."
