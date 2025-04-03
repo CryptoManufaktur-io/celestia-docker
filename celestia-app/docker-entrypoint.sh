@@ -72,6 +72,7 @@ dasel put -f /cosmos/config/app.toml -v true grpc.enable
 dasel put -f /cosmos/config/app.toml -v $MIN_RETAIN_BLOCKS min-retain-blocks
 dasel put -f /cosmos/config/app.toml -v $PRUNING pruning
 dasel put -f /cosmos/config/client.toml -v "tcp://localhost:${CL_RPC_PORT}" node
+dasel put -f /cosmos/config/app.toml -v "tcp://0.0.0.0:${CL_REST_PORT}" api.address
 
 # Word splitting is desired for the command line parameters
 # shellcheck disable=SC2086
