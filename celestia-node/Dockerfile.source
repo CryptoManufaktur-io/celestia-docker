@@ -59,7 +59,7 @@ RUN adduser \
 RUN chown -R ${USER}:${USER} ${DAEMON_HOME}
 
 # Copy binaries from the build stage
-COPY --from=build /go/bin/$DAEMON_NAME /usr/bin/$DAEMON_NAME
+COPY --from=build /root/code/build/$DAEMON_NAME /usr/bin/$DAEMON_NAME
 COPY --from=build /root/code/cel-key /usr/bin/cel-key
 COPY --from=build /root/code/cel-shed /usr/bin/cel-shed
 COPY --from=build /go/bin/dasel /usr/bin/dasel
