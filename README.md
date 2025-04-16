@@ -69,9 +69,9 @@ For *testing* purposes, it can be bypassed by adding the following flag to `CELE
 
 ## celestia-node
 
-### Create node-key
+### Import node-key
 
-Run `docker compose run --rm create-celestia-node-key`
+Run `docker compose run --rm import-celestia-node-key`
 
 It is meant to be executed only once, it has no sanity checks and creates the `$MONIKER.info`, `$xyz.address` and `$MONIKER.backup` files inside the `keys/celestia-node/` folder.
 
