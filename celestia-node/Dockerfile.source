@@ -1,0 +1,73 @@
+FROM golang:1.23-bullseye AS build
+
+ARG DAEMON_VERSION
+
+# Set up dependencies
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        curl git build-essential wget tar ca-certificates \
+        libleveldb-dev make clang pkg-config libssl-dev jq ncdu bsdmainutils && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set up the working directory
+WORKDIR /root/code
+
+# Install dasel
+RUN go install github.com/tomwright/dasel/v2/cmd/dasel@master
+
+# Clone the repository and checkout the required version
+RUN git clone https://github.com/celestiaorg/celestia-node.git . && \
+    git checkout ${DAEMON_VERSION}
+
+# Build the project
+RUN make build && \
+    make install && \
+    make cel-key && \
+    make cel-shed
+
+# Create a minimal runtime image
+FROM debian:bullseye-slim
+
+ARG DAEMON_NAME
+ARG USER
+ARG DAEMON_HOME
+ARG UID=10001
+
+ENV DAEMON_NAME=${DAEMON_NAME}
+ENV USER=${USER}
+ENV DAEMON_HOME=${DAEMON_HOME}
+
+# Set up runtime dependencies
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates jq curl procps lz4 && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p ${DAEMON_HOME}
+
+# Create a non-root user
+RUN adduser \
+    --disabled-login \
+    --gecos "" \
+    --shell /sbin/nologin \
+    --uid "${UID}" \
+    "${USER}"
+
+# Give ownership of DAEMON_HOME to USER_NAME
+RUN chown -R ${USER}:${USER} ${DAEMON_HOME}
+
+# Copy binaries from the build stage
+COPY --from=build /root/code/build/$DAEMON_NAME /usr/bin/$DAEMON_NAME
+COPY --from=build /root/code/cel-key /usr/bin/cel-key
+COPY --from=build /root/code/cel-shed /usr/bin/cel-shed
+COPY --from=build /go/bin/dasel /usr/bin/dasel
+
+COPY docker-entrypoint.sh /usr/bin/docker-entrypoint.sh
+RUN chmod +x /usr/bin/docker-entrypoint.sh
+
+USER ${USER_NAME}
+WORKDIR ${DAEMON_HOME}
+
+ENTRYPOINT ["celestia"]
