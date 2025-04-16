@@ -10,10 +10,12 @@ services:
   celestia-node:
     build:
       context: ./celestia-node
-      dockerfile: Dockerfile.binary
+      dockerfile: Dockerfile.source
       args:
-        - CELESTIA_NODE_VERSION=${CELESTIA_NODE_VERSION:-v0.20.4}
         - USER=celestia
+        - DAEMON_VERSION=${CELESTIA_NODE_VERSION:-v0.21.9}
+        - DAEMON_HOME=/cosmos
+        - DAEMON_NAME=celestia
     image: celestia-node:local
     pull_policy: never
     user: celestia
@@ -24,6 +26,10 @@ services:
       - P2P_PORT=${CELESTIA_NODE_P2P_PORT:-2121}
       - NETWORK=${NETWORK:-celestia}
       - EXTRAS=${CELESTIA_NODE_EXTRA_FLAGS}
+    ports:
+      - "${CELESTIA_NODE_RPC_PORT}:${CELESTIA_NODE_RPC_PORT}"
+      - "${CELESTIA_NODE_P2P_PORT:-2121}:${CELESTIA_NODE_P2P_PORT:-2121}/tcp"
+      - "${CELESTIA_NODE_P2P_PORT:-2121}:${CELESTIA_NODE_P2P_PORT:-2121}/udp"
     <<: *logging
     volumes:
       - celestia-node-data:/data
@@ -37,36 +43,63 @@ services:
       - /data
       - --core.ip
       - ${CELESTIA_NODE_GRPC}
-      - --keyring.keyname 
+      - --keyring.keyname
       - ${MONIKER}
       - --rpc.port
       - ${CELESTIA_NODE_RPC_PORT}
       - --rpc.addr
       - "0.0.0.0"
     labels:
-        - traefik.enable=true
-        - traefik.http.routers.${CELESTIA_NODE_HOST}.service=${CELESTIA_NODE_HOST}
-        - traefik.http.routers.${CELESTIA_NODE_HOST}.entrypoints=websecure
-        - traefik.http.routers.${CELESTIA_NODE_HOST}.rule=Host(`${CELESTIA_NODE_HOST}.${DOMAIN}`)
-        - traefik.http.routers.${CELESTIA_NODE_HOST}.tls.certresolver=letsencrypt
-        - traefik.http.routers.${CELESTIA_NODE_HOST}lb.service=${CELESTIA_NODE_HOST}
-        - traefik.http.routers.${CELESTIA_NODE_HOST}lb.entrypoints=websecure
-        - traefik.http.routers.${CELESTIA_NODE_HOST}lb.rule=Host(`${CELESTIA_NODE_LB}.${DOMAIN}`)
-        - traefik.http.routers.${CELESTIA_NODE_HOST}lb.tls.certresolver=letsencrypt
-        - traefik.http.services.${CELESTIA_NODE_HOST}.loadbalancer.server.port=${CELESTIA_NODE_RPC_PORT}
+      - traefik.enable=true
+      - traefik.http.routers.${CELESTIA_NODE_HOST}.service=${CELESTIA_NODE_HOST}
+      - traefik.http.routers.${CELESTIA_NODE_HOST}.entrypoints=websecure
+      - traefik.http.routers.${CELESTIA_NODE_HOST}.rule=Host(`${CELESTIA_NODE_HOST}.${DOMAIN}`)
+      - traefik.http.routers.${CELESTIA_NODE_HOST}.tls.certresolver=letsencrypt
+      - traefik.http.routers.${CELESTIA_NODE_HOST}lb.service=${CELESTIA_NODE_HOST}
+      - traefik.http.routers.${CELESTIA_NODE_HOST}lb.entrypoints=websecure
+      - traefik.http.routers.${CELESTIA_NODE_HOST}lb.rule=Host(`${CELESTIA_NODE_LB}.${DOMAIN}`)
+      - traefik.http.routers.${CELESTIA_NODE_HOST}lb.tls.certresolver=letsencrypt
+      - traefik.http.services.${CELESTIA_NODE_HOST}.loadbalancer.server.port=${CELESTIA_NODE_RPC_PORT}
 
   create-celestia-node-key:
     profiles: ["tools"]
-    image: ghcr.io/celestiaorg/celestia-node:${CELESTIA_NODE_VERSION:-v0.20.4}
+    image: ghcr.io/celestiaorg/celestia-node:${CELESTIA_NODE_VERSION:-v0.21.9}
     user: root
+    environment:
+      - NETWORK=${NETWORK}
+      - CELESTIA_NODE_TYPE=${CELESTIA_NODE_TYPE}
+      - MONIKER=${MONIKER}
     volumes:
       - ./keys/celestia-node:/home/celestia/keys/keyring-test:rw
-    entrypoint: ["/bin/bash","-c"]
+    entrypoint: ["/bin/bash", "-c"]
     command:
       - |
         P2P_NETWORK=$(echo "$NETWORK" | grep -Eo 'mocha|arabica' | sed 's/^/--p2p.network /' || echo "")
-        cel-key add $MONIKER --keyring-backend test --node.type $CELESTIA_NODE_TYPE $$P2P_NETWORK 2>&1 | tee /tmp/temp_backup
+        cel-key add $MONIKER --keyring-backend test --node.type $CELESTIA_NODE_TYPE $P2P_NETWORK 2>&1 | tee /tmp/temp_backup
         [ $${PIPESTATUS[0]} -eq 0 ] && sed -n '/- address/,$$p' /tmp/temp_backup > "/home/celestia/keys/keyring-test/$MONIKER.backup" || rm /tmp/temp_backup
+        chown -R celestia:celestia /home/celestia/keys/keyring-test/*
+
+  import-celestia-node-key:
+    profiles: ["tools"]
+    image: ghcr.io/celestiaorg/celestia-node:${CELESTIA_NODE_VERSION:-v0.21.9}
+    user: root
+    environment:
+      - MONIKER=${MONIKER}
+      - MNEMONIC=${MNEMONIC}
+      - NETWORK=${NETWORK}
+      - CELESTIA_NODE_TYPE=${CELESTIA_NODE_TYPE}
+    volumes:
+      - ./keys/celestia-node:/home/celestia/keys/keyring-test:rw
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        P2P_NETWORK=$(echo "$NETWORK" | grep -Eo 'mocha|arabica' | sed 's/^/--p2p.network /' || echo "")
+        if [ -n "$MNEMONIC" ]; then
+          echo "$MNEMONIC" | cel-key import $MONIKER --keyring-backend test --node.type $CELESTIA_NODE_TYPE $P2P_NETWORK
+        else
+          cel-key add $MONIKER --keyring-backend test --node.type $CELESTIA_NODE_TYPE $P2P_NETWORK 2>&1 | tee /tmp/temp_backup
+          [ $${PIPESTATUS[0]} -eq 0 ] && sed -n '/- address/,$$p' /tmp/temp_backup > "/home/celestia/keys/keyring-test/$MONIKER.backup" || rm /tmp/temp_backup
+        fi
         chown -R celestia:celestia /home/celestia/keys/keyring-test/*
 
 volumes:
