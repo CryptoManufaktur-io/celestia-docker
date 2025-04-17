@@ -51,8 +51,6 @@ services:
       - ${CELESTIA_NODE_RPC_PORT}
       - --rpc.addr
       - "0.0.0.0"
-      - --keyring.keyname
-      - ${MONIKER}
       - --metrics.tls=true
       - --metrics
       - --metrics.endpoint=otel.celestia.observer
