@@ -6,7 +6,7 @@ __p2p_network_flag=$(echo "$NETWORK" | grep -Eo 'mocha|arabica' | sed 's/^/--p2p
 
 if [[ ! -f /data/.initialized ]]; then
   echo "Initializing!"
-  celestia $CELESTIA_NODE_TYPE init --keyring.keyname ${MONIKER} --core.ip ${CELESTIA_NODE_GRPC_IP} --core.port ${CELESTIA_NODE_GRPC_PORT} --node.store /data $__p2p_network_flag
+  celestia $CELESTIA_NODE_TYPE init --core.ip ${CELESTIA_NODE_GRPC_IP} --core.port ${CELESTIA_NODE_GRPC_PORT} --node.store /data $__p2p_network_flag
   touch /data/.initialized
 else
   echo "Already initialized!"
