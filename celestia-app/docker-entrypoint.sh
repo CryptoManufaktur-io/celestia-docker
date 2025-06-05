@@ -40,7 +40,7 @@ if [[ ! -f /cosmos/.initialized ]]; then
     dasel put -f /cosmos/config/config.toml -v "${RAPID_SYNC_URL},${RAPID_SYNC_URL}" statesync.rpc_servers
     dasel put -f /cosmos/config/config.toml -v $SNAPSHOT_HEIGHT statesync.trust_height
     dasel put -f /cosmos/config/config.toml -v $SNAPSHOT_HASH statesync.trust_hash
-  else 
+  else
     echo "No rapid sync url defined."
   fi
 
@@ -61,6 +61,7 @@ dasel put -f /cosmos/config/config.toml -v "tcp://0.0.0.0:${CL_P2P_PORT}" p2p.la
 dasel put -f /cosmos/config/config.toml -v 10485760 p2p.recv_rate
 dasel put -f /cosmos/config/config.toml -v 10485760 p2p.send_rate
 dasel put -f /cosmos/config/config.toml -v "tcp://0.0.0.0:${CL_RPC_PORT}" rpc.laddr
+dasel put -f /cosmos/config/config.toml -v "tcp://0.0.0.0:9098" rpc.grpc_laddr
 dasel put -f /cosmos/config/config.toml -v ${MONIKER} moniker
 dasel put -f /cosmos/config/config.toml -v true prometheus
 dasel put -f /cosmos/config/config.toml -v ${LOG_LEVEL} log_level
