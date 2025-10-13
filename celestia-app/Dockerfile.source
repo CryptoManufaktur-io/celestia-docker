@@ -39,7 +39,7 @@ ENV DAEMON_HOME=${DAEMON_HOME}
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        ca-certificates jq curl procps lz4 && \
+        ca-certificates jq curl procps lz4 aria2 && \
     rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p ${DAEMON_HOME}

@@ -7,7 +7,7 @@ ARG USER=cosmos
 ARG UID=10001
 ARG DAEMON_VERSION=v3.0.2
 
-RUN apt-get update && apt-get install -y ca-certificates tzdata bash curl wget lz4 jq tar
+RUN apt-get update && apt-get install -y ca-certificates tzdata bash curl wget lz4 jq tar aria2
 
 # Define mounted volume
 VOLUME /cosmos

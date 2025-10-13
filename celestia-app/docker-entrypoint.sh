@@ -16,7 +16,17 @@ if [[ ! -f /cosmos/.initialized ]]; then
 
   if [ -n "$SNAPSHOT" ]; then
     echo "Downloading snapshot..."
-    curl -o - -L $SNAPSHOT | lz4 -c -d - | tar --exclude='data/priv_validator_state.json' -x -C /cosmos
+    # Try aria2c first for faster multi-connection downloads (3-10x faster)
+    if command -v aria2c &> /dev/null; then
+      echo "Using aria2c for faster download (multi-connection)..."
+      aria2c -x 16 -s 16 -k 1M --file-allocation=none --allow-overwrite=true -d /tmp -o snapshot.tar.lz4 "$SNAPSHOT" && \
+        lz4 -c -d /tmp/snapshot.tar.lz4 | tar --exclude='data/priv_validator_state.json' -x -C /cosmos && \
+        rm -f /tmp/snapshot.tar.lz4
+    else
+      # Fallback to curl if aria2c is not available
+      echo "aria2c not found, falling back to curl..."
+      curl -o - -L $SNAPSHOT | lz4 -c -d - | tar --exclude='data/priv_validator_state.json' -x -C /cosmos
+    fi
   else
     echo "No snapshot URL defined."
   fi
